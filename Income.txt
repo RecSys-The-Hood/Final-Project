@@ -1,0 +1,10 @@
+Income
+Religion
+Family Size 
+Age
+Bachelor/Married
+User Preferences - Proximity to Hospitals, Recreational areas, schools and Workplaces,
+		Property Types.
+
+
+Recommending based on the images of the house and the user viewed preferences(History of houses viewed by the user) using MAB.
