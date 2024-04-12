@@ -6,7 +6,7 @@ from faker import Faker
 fake = Faker()
 
 # Generate synthetic data
-num_records = 1000  # Number of records to generate
+num_records = 10000  # Number of records to generate
 religions = ['Hindu', 'Jain', 'Christian', 'Buddhist', 'Muslim']
 data = {
     'Income': [np.random.randint(40000, 200000) for _ in range(num_records)],

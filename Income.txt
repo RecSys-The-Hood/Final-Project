@@ -1,4 +1,5 @@
 Income
+Name
 Religion
 Family Size 
 Age
