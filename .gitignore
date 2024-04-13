@@ -1,4 +1,6 @@
 *.csv
 __pycache__
 *.geojson
+*.jpg
+
 data
