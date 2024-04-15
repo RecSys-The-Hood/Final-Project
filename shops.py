@@ -25,22 +25,23 @@ def filter_geojson_by_coordinates(geojson_file, city_name, city_coordinate_range
         lon_range = city_coordinates['longitude']
         if (lat_range[0] <= latitude <= lat_range[1]) and (lon_range[0] <= longitude <= lon_range[1]):
             # Extract required properties
-            properties = feature.get('properties', {})
-            name = properties.get('name')
-            gnis_feature_id = properties.get('gnis:feature_id')
-            gnis_county_id = properties.get('gnis:county_id')
-            gnis_state_id = properties.get('gnis:state_id')
-            created = properties.get('gnis:created')
+            name = feature.get('properties', {}).get('name')
+            feature_id = feature.get('properties', {}).get('gnis:feature_id')
+            county_id = feature.get('properties', {}).get('gnis:county_id')
+            state_id = feature.get('properties', {}).get('gnis:state_id')
+            created = feature.get('properties', {}).get('gnis:created')
+            id = feature.get('id')
             
             # Create data dictionary
             data = {
                 'latitude': latitude,
                 'longitude': longitude,
                 'city': city_name,
+                'id': id,
                 'name': name,
-                'feature_id': gnis_feature_id,
-                'county_id': gnis_county_id,
-                'state_id': gnis_state_id,
+                'feature_id': feature_id,
+                'county_id': county_id,
+                'state_id': state_id,
                 'created': created
             }
             
@@ -49,7 +50,7 @@ def filter_geojson_by_coordinates(geojson_file, city_name, city_coordinate_range
         
     return filtered_features
 
-def process_schools_folder(folder_path, city_coordinate_ranges):
+def process_geojson_folder(folder_path, city_coordinate_ranges):
     all_data = []
     
     # Iterate through all files in the folder
@@ -85,14 +86,14 @@ city_coordinate_ranges = {
     "washington": {"latitude": (38, 39), "longitude": (-78, -76)}
 }
 
-# Folder path containing Schools GeoJSON files
-schools_folder_path = './Schools/'
+# Folder path containing GeoJSON files
+folder_path = './Schools/'
 
-# Process Schools GeoJSON files in the folder
-schools_data = process_schools_folder(schools_folder_path, city_coordinate_ranges)
+# Process GeoJSON files in the folder
+all_filtered_data = process_geojson_folder(folder_path, city_coordinate_ranges)
 
 # Convert to DataFrame
-schools_df = pd.DataFrame(schools_data)
+df = pd.DataFrame(all_filtered_data)
 
 # Save DataFrame to CSV
-schools_df.to_csv('combined_schools.csv', index=False)
+df.to_csv('combined_shops.csv', index=False)
