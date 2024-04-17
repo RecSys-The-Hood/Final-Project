@@ -5,6 +5,33 @@ from faker import Faker
 # Initialize Faker
 fake = Faker()
 
+# Function to generate house preference description
+def generate_house_preference(row):
+    preference = "This person is looking for a"
+    
+    if row['Proximity to Hospitals']:
+        preference += " house near hospitals,"
+    if row['Proximity to Recreational Areas']:
+        preference += " close to recreational areas,"
+    if row['Proximity to Schools']:
+        preference += " with easy access to schools,"
+    if row['Proximity to Workplaces']:
+        preference += " near workplaces,"
+    
+    # Additional features
+    if np.random.choice([True, False]):
+        preference += " sea-facing,"
+    if np.random.choice([True, False]):
+        preference += " with a garden,"
+    if np.random.choice([True, False]):
+        preference += " with a swimming pool,"
+    if np.random.choice([True, False]):
+        preference += " with a garage,"
+    
+    preference = preference.rstrip(',') + "."
+    
+    return preference
+
 # Generate synthetic data
 num_records = 10000  # Number of records to generate
 religions = ['Hindu', 'Jain', 'Christian', 'Buddhist', 'Muslim']
@@ -25,7 +52,10 @@ data = {
 # Convert data to DataFrame
 df = pd.DataFrame(data)
 
-# Save DataFrame to CSV file
-df.to_csv('synthetic_data.csv', index=False)
+# Add house preference description column
+df['House Preference'] = df.apply(generate_house_preference, axis=1)
 
-print("Synthetic data saved to synthetic_data.csv")
+# Save DataFrame to CSV file
+df.to_csv('synthetic_data_with_preferences.csv', index=False)
+
+print("Synthetic data with preferences saved to synthetic_data_with_preferences.csv")
