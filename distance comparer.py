@@ -9,7 +9,7 @@ df_schools = pd.read_csv('combined_schools.csv')
 df_transit = pd.read_csv('combined_transit.csv')
 
 # Read JSON file containing listings data
-with open('combined_filtered_data_copy.json', 'r') as file:
+with open('combined_filtered_data.json', 'r') as file:
     listings_data = json.load(file)
 df_listings = pd.DataFrame(listings_data)
 df_listings['addressCity'] = df_listings['address'].apply(lambda x: ''.join(x['city'].split()).capitalize())
@@ -62,7 +62,7 @@ df_listings['transit_within_2km'] = df_listings.apply(lambda x: count_facilities
 
 # Drop the original 'address' column
 df_listings.drop('address', axis=1, inplace=True)
-print(df_listings)
+print(df_listings.head(10))
 print("Writing")
 # Save the updated DataFrame with new columns
-df_listings.to_csv('data_new.csv', index=False)
+df_listings.to_csv('data_new2.csv', index=False)
