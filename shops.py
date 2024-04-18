@@ -87,7 +87,7 @@ city_coordinate_ranges = {
 }
 
 # Folder path containing GeoJSON files
-folder_path = './Schools/'
+folder_path = './Shops/'
 
 # Process GeoJSON files in the folder
 all_filtered_data = process_geojson_folder(folder_path, city_coordinate_ranges)
