@@ -1,73 +1,70 @@
 import streamlit as st
 import pandas as pd
 
-# Initialize session state for navigation and form data
+# Set the path to your CSV file
+CSV_FILE_PATH = "combined_summary_data.csv"  # Ensure the file exists at this path
+
+# Initialize session state
 if "current_page" not in st.session_state:
     st.session_state["current_page"] = "home"
     st.session_state["form_data"] = {}
+    st.session_state["uploaded_data"] = None
 
-# List of states
-states_list = ['AL', 'DC', 'IL', 'NV', 'AZ', 'PA', 'GA', 'CA', 'TX', 'NY', 'FL', 'MA', 'MI']
+# Load the CSV data from the predefined path and cache it
+@st.cache_data
+def load_data(file_path):
+    try:
+        return pd.read_csv(file_path)
+    except FileNotFoundError:
+        st.error("CSV file not found. Please ensure the file path is correct.")
+        st.stop()
+    except Exception as e:
+        st.error(f"Error loading CSV file: {e}")
+        st.stop()
 
-# Dummy data for demonstration with multiple image URLs
-dummy_data = [
-    {
-        "Name": "House 1", 
-        "address.city": "City A", 
-        "address.state": "CA", 
-        "price": 300000, 
-        "bedrooms": 3, 
-        "bathrooms": 2, 
-        "livingArea": 2000, 
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed auctor.", 
-        "image_urls": ["https://via.placeholder.com/300", "https://via.placeholder.com/301", "https://via.placeholder.com/302"]
-    },
-    {
-        "Name": "House 2", 
-        "address.city": "City B", 
-        "address.state": "TX", 
-        "price": 250000, 
-        "bedrooms": 2, 
-        "bathrooms": 1.5, 
-        "livingArea": 1500, 
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed auctor.", 
-        "image_urls": ["https://via.placeholder.com/303", "https://via.placeholder.com/304", "https://via.placeholder.com/305"]
-    },
-    {
-        "Name": "House 3", 
-        "address.city": "City C", 
-        "address.state": "NY", 
-        "price": 400000, 
-        "bedrooms": 4, 
-        "bathrooms": 3, 
-        "livingArea": 2500, 
-        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed auctor.", 
-        "image_urls": ["https://via.placeholder.com/306", "https://via.placeholder.com/307", "https://via.placeholder.com/308"]
-    },
-]
+st.session_state["uploaded_data"] = load_data(CSV_FILE_PATH)
 
-# Convert dummy data to DataFrame
-dummy_df = pd.DataFrame(dummy_data)
-
-# Sidebar for additional navigation or information
+# Sidebar for navigation and information
 st.sidebar.title("Navigation")
 st.sidebar.markdown("## About This App")
 st.sidebar.write(
-    """
-    This real estate recommendation app helps you find the best properties 
-    based on your preferences. Fill out the form to receive personalized 
-    recommendations.
-    """
+    "This app helps you find real estate property recommendations based on "
+    "your preferences and location. Use the form to input your details, "
+    "and get personalized property recommendations."
+)
+
+# Sidebar instructions and tips
+st.sidebar.markdown("## How to Use")
+st.sidebar.write(
+    "- Fill out the form with your information and preferences.\n"
+    "- After submission, the app will provide property recommendations.\n"
+    "- Use the buttons to navigate or modify your search."
+)
+
+st.sidebar.markdown("## Notes")
+st.sidebar.write(
+    "Ensure that the provided data includes relevant property details such as state, "
+    "city, price, bedrooms, bathrooms, and image URLs.\n"
+    "If the data does not include these details, recommendations may not be accurate."
 )
 
 # Navigation logic based on session state
 if st.session_state["current_page"] == "home":
-    # Main content area for form and initial information
     st.title("Real Estate Property Recommendations")
-    st.write("Please complete the form below to get personalized property recommendations.")
+
+    # Check if data is loaded properly
+    if st.session_state["uploaded_data"] is None:
+        st.write("Failed to load the property data.")
+        st.stop()
+
+    dummy_df = st.session_state["uploaded_data"]
+
+    # List of states for the drop-down
+    states = ['AL', 'DC', 'IL', 'NV', 'AZ', 'PA', 'GA', 'CA', 'TX', 'NY', 'FL', 'MA', 'MI']
 
     # Form to collect user input for property recommendations
     with st.form("user_info_form"):
+        state_selected = st.selectbox("Select State", states, index=0)  # Default to first state
         income = st.number_input("Income ($)", min_value=40000, max_value=200000, step=1000)
         name = st.text_input("Name")
         family_size = st.number_input("Family Size", min_value=1, max_value=6)
@@ -78,15 +75,14 @@ if st.session_state["current_page"] == "home":
         proximity_schools = st.checkbox("Proximity to Schools")
         proximity_workplaces = st.checkbox("Proximity to Workplaces")
         property_type = st.selectbox("Preferred Property Type", ["Apartment", "House", "Condo", "Townhouse"])
-        selected_state = st.selectbox("Select State", states_list)
         description = st.text_area("Describe the house you want", "")
 
         submit = st.form_submit_button("Get Recommendations")
 
     # If the form is submitted, store form data in session state and navigate to recommendations
     if submit:
-        # Store form data in session state
-        st.session_state["form_data"] = {
+        form_data = {
+            "state_selected": state_selected,
             "income": income,
             "name": name,
             "family_size": family_size,
@@ -97,51 +93,50 @@ if st.session_state["current_page"] == "home":
             "proximity_schools": proximity_schools,
             "proximity_workplaces": proximity_workplaces,
             "property_type": property_type,
-            "selected_state": selected_state,
-            "description": description
+            "description": description,
         }
+        st.session_state["form_data"] = form_data
         st.session_state["current_page"] = "recommendations"
 
-# Display property recommendations if redirected to the recommendations page
 elif st.session_state["current_page"] == "recommendations":
     st.title("Recommended Properties")
 
     # Get form data from session state
     form_data = st.session_state["form_data"]
 
-    # Dummy recommendation logic: filter by preferred property type, price range, and selected state
+    dummy_df = st.session_state["uploaded_data"]
+
+    # Recommendation logic using the selected state
     recommended_properties = dummy_df[
-        (dummy_df["address.state"] == form_data["selected_state"])
+        dummy_df["address.state"] == form_data["state_selected"]
     ]
 
     # Display recommended properties with images and details
+    if recommended_properties.empty:
+        st.write("No properties found in the selected state. Try modifying your search.")
+        st.session_state["current_page"] = "home"
+        st.stop()
+
     for idx, property in recommended_properties.iterrows():
         with st.container():
-            # Display property details
             st.header(property["Name"])
             st.write(f"Location: {property['address.city']}, {property['address.state']}")
             st.write(f"Price: ${property['price']}")
-            st.write(f"Bedrooms: {property['bedrooms']}, Bathrooms: {property['bathrooms']}")
+            st.write(f"Bedrooms: {property['bedrooms']}, {property['bathrooms']}")
             st.write(f"Size: {property['livingArea']} sqft")
             st.write(property["description"])
 
-            # Display the first image initially
-            st.image(property["image_urls"][0], use_column_width=True)
+            if "image_urls" in property and len(property["image_urls"]) > 0:
+                st.image(property["image_urls"][0], use_column_width=True)
 
-            # Button to view all images on a new page
-            if len(property["image_urls"]) > 1:
                 if st.button("View All Images"):
-                    # Create a new page to display all images
-                    st.write("---")
                     st.write("## All Images")
                     for image_url in property["image_urls"]:
                         st.image(image_url, use_column_width=True)
+            else:
+                st.write("No images available.")
 
-            # Add an interactive element for contacting about the property
-            if st.button(f"Contact about {property['Name']}"):
-                st.write("Contact form coming soon!")
-
-    # Buttons to go back and modify the search
+    # Navigation buttons
     col1, col2 = st.columns(2)
     if col1.button("Modify Search"):
         st.session_state["current_page"] = "home"
