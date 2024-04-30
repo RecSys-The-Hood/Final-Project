@@ -1,6 +1,20 @@
+from io import BufferedRandom
 import streamlit as st
 import pandas as pd
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+import json
+import joblib
 
+def filter_by_labels(data, labels):
+        # Use list comprehension to get dictionaries with matching labels
+        filtered_data = [entry for entry in data if entry['labels'] == labels]
+        return filtered_data
+
+label_encoder = LabelEncoder()
 # Set the path to your CSV file
 CSV_FILE_PATH = "combined_summary_data.csv"  # Ensure the file exists at this path
 
@@ -65,16 +79,52 @@ if st.session_state["current_page"] == "home":
     # Form to collect user input for property recommendations
     with st.form("user_info_form"):
         state_selected = st.selectbox("Select State", states, index=0)  # Default to first state
-        income = st.number_input("Income ($)", min_value=40000, max_value=200000, step=1000)
-        name = st.text_input("Name")
-        family_size = st.number_input("Family Size", min_value=1, max_value=6)
-        age = st.number_input("Age", min_value=18, max_value=80)
-        marital_status = st.selectbox("Marital Status", ["Bachelor", "Married"])
-        proximity_hospitals = st.checkbox("Proximity to Hospitals")
-        proximity_recreation = st.checkbox("Proximity to Recreational Areas")
-        proximity_schools = st.checkbox("Proximity to Schools")
-        proximity_workplaces = st.checkbox("Proximity to Workplaces")
-        property_type = st.selectbox("Preferred Property Type", ["Apartment", "House", "Condo", "Townhouse"])
+        bedrooms = st.number_input("Bedrooms", min_value=1)
+        bathrooms = st.number_input("Bathrooms", min_value=1)
+        budget = st.number_input("Budget ($)", min_value=40000, step=1000)
+        # name = st.text_input("Name")
+        property_type = st.selectbox("Preferred Property Type", ['APARTMENT' ,'CONDO' ,'MANUFACTURED', 'MULTI_FAMILY' ,'SINGLE_FAMILY',
+ 'TOWNHOUSE'])
+        living_area = st.number_input("Living Area (sqft)", min_value=100)
+        # family_size = st.number_input("Family Size", min_value=1, max_value=6)
+        # age = st.number_input("Age", min_value=18, max_value=80)
+        # marital_status = st.selectbox("Marital Status", ["Bachelor", "Married"])
+        # proximity_hospitals = st.checkbox("Proximity to Hospitals")
+        min_proximity = 0  # Minimum distance
+        max_proximity = 1000  # Maximum distance
+        step = 1  # Step size for the slider
+
+        # Sliders for proximity to different amenities
+        number_recreation = st.slider(
+            "Number of Recreational Areas",
+            min_proximity,
+            max_proximity,
+            step=step,
+            value=5,  # Default value
+        )
+        number_shops = st.slider(
+            "Number of Shops",
+            min_proximity,
+            max_proximity,
+            step=step,
+            value=5,  # Default value
+        )
+        number_schools = st.slider(
+            "Number of Schools",
+            min_proximity,
+            max_proximity,
+            step=step,
+            value=5,  # Default value
+        )
+
+        vicinity_transit = st.slider(
+            "Transit",
+            min_proximity,
+            max_proximity,
+            step=step,
+            value=5,  # Default value
+        )
+
         description = st.text_area("Describe the house you want", "")
 
         submit = st.form_submit_button("Get Recommendations")
@@ -83,17 +133,16 @@ if st.session_state["current_page"] == "home":
     if submit:
         form_data = {
             "state_selected": state_selected,
-            "income": income,
-            "name": name,
-            "family_size": family_size,
-            "age": age,
-            "marital_status": marital_status,
-            "proximity_hospitals": proximity_hospitals,
-            "proximity_recreation": proximity_recreation,
-            "proximity_schools": proximity_schools,
-            "proximity_workplaces": proximity_workplaces,
-            "property_type": property_type,
+            "bedrooms": bedrooms,
+            "bathrooms": bathrooms, 
+            "price": budget,
+            "homeType": property_type,
+            "livingArea": living_area,
             "description": description,
+            "leisure_within_5km": number_recreation,
+            "shops_within_5km": number_shops,
+            "schools_within_5km": number_schools,
+            "transit_within_2km":vicinity_transit
         }
         st.session_state["form_data"] = form_data
         st.session_state["current_page"] = "recommendations"
@@ -103,6 +152,51 @@ elif st.session_state["current_page"] == "recommendations":
 
     # Get form data from session state
     form_data = st.session_state["form_data"]
+    description = form_data["description"]
+    df_data=pd.DataFrame([form_data])
+    df_data=df_data.set_index('state_selected')
+    df_data = df_data.drop(columns=['description'])
+
+    homeType_Encoding= {
+        'APARTMENT': 0,
+        'CONDO': 1,
+        'MANUFACTURED': 2,
+        'MULTI_FAMILY': 3,
+        'SINGLE_FAMILY': 4,
+        'TOWNHOUSE': 5
+    }
+
+    df_data['homeType'] = df_data['homeType'].map(homeType_Encoding)
+
+    json_file_path = "ClusterPoints_Dataset.json"
+
+    with open(json_file_path, "r") as file:
+        kmeansdata = json.load(file)
+
+    json_file_path_1 = "Labelled_Dataset_with_zpid.json"
+
+    with open(json_file_path_1, "r") as file:
+        fulldata = json.load(file)
+
+    # cluster_points= kmeansdata[form_data["state_selected"]]
+    # print(cluster_points)
+    scaler=StandardScaler()
+    X=scaler.fit_transform(df_data)
+
+    kmeans = joblib.load(f'{form_data['state_selected']}_kmeans.pkl')
+    
+    predicted_label=kmeans.predict(X)
+    print(predicted_label)
+    state_full_data=fulldata[form_data["state_selected"]]
+    print(state_full_data[0])
+
+    state_filtered_data = filter_by_labels(state_full_data, predicted_label[0])
+    print(state_filtered_data[0])
+    print(len(state_filtered_data))
+    # state_cluster_full_data = state_full_data[state_full_data['labels']==predicted_label[0]]
+    print("State Cluster Full data")
+    # print(state_cluster_full_data)
+    # cluster_prediction = kmeans.predict([new_data_point])
 
     dummy_df = st.session_state["uploaded_data"]
 

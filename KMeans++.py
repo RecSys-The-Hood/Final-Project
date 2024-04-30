@@ -1,8 +1,9 @@
 # %%
+import joblib
 import pandas as pd
 import numpy as np
 from sklearn.cluster import KMeans
-
+import joblib
 # %%
 df=pd.read_csv("./Final_Combined_Dataset.csv")
 df=df.set_index(keys="zpid")
@@ -37,9 +38,7 @@ columns_to_check = ['description', 'homeInsights','image_captions']
 
 # Remove rows with all null values in specified columns
 df1 = df1.dropna(subset=columns_to_check, how='all')
-# df1
 
-# %%
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
@@ -47,7 +46,8 @@ import matplotlib.pyplot as plt
 
 label_encoder = LabelEncoder()
 df1['homeType'] = label_encoder.fit_transform(df1['homeType'])
-
+encoded_classes = label_encoder.classes_
+print(encoded_classes)
 # %%
 dfs_by_category = {}
 
@@ -98,37 +98,61 @@ for category, df_category in dfs_by_category.items():
 #     plt.show()
 
 # %%
-dfs_by_category_final={}
-dfs_cluster={}
-for key,value in dfs_by_category.items():
-    if(len(value)>20):
-        df_check=value
-        # Get all rows from df_large that have matching index with df_small
-        matching_rows = df.loc[df.index.isin(df_check.index)]
-
-        df_check=df_check.drop(columns=['description','homeInsights','image_captions','address.city','address.state'])
-        scaler=StandardScaler()
-        X=scaler.fit_transform(df_check)
-        kmeans=KMeans(n_clusters=20,init='k-means++', random_state=42)
-        kmeans.fit(X)
-        labels=kmeans.labels_
-        matching_rows['labels']=labels
-        dfs_by_category_final[key]=matching_rows
-        dfs_cluster[key]=kmeans.cluster_centers_
-
-# print(dfs_by_category_final)
-# pd.DataFrame(dfs_by_category_final).to_json('labelled_data.csv')
+dfs_by_category_final = {}
+dfs_cluster = {}
 import json
-json_data = {key: value.to_dict(orient='records') for key, value in dfs_by_category_final.items()}
-# json_data1={key: value.to_dict(orient='records') for key, value in dfs_cluster.items()}
+# Assume dfs_by_category is already defined
+for key, value in dfs_by_category.items():
+    if len(value) > 20:
+        df_check = value
+        
+        # Keep only essential columns
+        df_check = df_check.drop(columns=[
+            'description', 'homeInsights', 'image_captions', 
+            'address.city', 'address.state', 'address.zipcode'
+        ])
 
-# Convert NumPy arrays to lists for JSON serialization
+        # Standardize the data and apply KMeans clustering
+        scaler = StandardScaler()
+        X = scaler.fit_transform(df_check)
+        kmeans = KMeans(n_clusters=12, init='k-means++', random_state=42)
+        kmeans.fit(X)
+        labels = kmeans.labels_
+
+        # Add labels to the DataFrame
+        df_check['labels'] = labels
+
+        # Reset the index to ensure the original index (like 'zpid') becomes a column
+        df_check = df_check.reset_index()
+
+        # Convert columns to JSON-serializable types
+        df_check = df_check.astype({
+            'zpid': int,
+            'bedrooms': int,
+            'bathrooms': int,
+            'price': float,
+            'livingArea': float,
+            'labels': int
+        })
+
+        dfs_by_category_final[key] = df_check
+        dfs_cluster[key] = kmeans.cluster_centers_
+
+        # Save KMeans model
+        joblib.dump(kmeans, f'{key}_kmeans.pkl')
+
+# Convert to dictionary format for JSON serialization
+json_data = {key: df.to_dict(orient='records') for key, df in dfs_by_category_final.items()}
+
+# Ensure conversion to Python-native types
 json_cluster_data = {key: value.tolist() for key, value in dfs_cluster.items()}
-with open('Labelled_Dataset.json', 'w') as f:
-    json.dump(json_data , f, indent=4)
+
+# Save to JSON files
+with open('Labelled_Dataset_with_zpid.json', 'w') as f:
+    json.dump(json_data, f, indent=4)
 
 with open('ClusterPoints_Dataset.json', 'w') as f:
-    json.dump(json_cluster_data , f, indent=4)
+    json.dump(json_cluster_data, f, indent=4)
 # df_combined = pd.concat(dfs_by_category_final.values())
 
 # # Save the combined dataframe to a CSV file
