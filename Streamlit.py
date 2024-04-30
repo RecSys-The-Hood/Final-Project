@@ -14,7 +14,10 @@ import torch
 from sentence_transformers.util import cos_sim
 import json
 import joblib
-
+import requests
+from zmq import TYPE 
+import csv
+import ast
 def filter_by_labels(data, labels):
         # Use list comprehension to get dictionaries with matching labels
         filtered_data = [entry for entry in data if entry['labels'] == labels]
@@ -22,8 +25,8 @@ def filter_by_labels(data, labels):
 
 label_encoder = LabelEncoder()
 # Set the path to your CSV file
-CSV_FILE_PATH = "combined_summary_data.csv"  # Ensure the file exists at this path
-model = SentenceTransformer("mixedbread-ai/mxbai-embed-large-v1")
+# CSV_FILE_PATH = "combined_summary_data.csv"  # Ensure the file exists at this path
+# model = SentenceTransformer("mixedbread-ai/mxbai-embed-large-v1")
 # Initialize session state
 if "current_page" not in st.session_state:
     st.session_state["current_page"] = "home"
@@ -42,7 +45,7 @@ def load_data(file_path):
         st.error(f"Error loading CSV file: {e}")
         st.stop()
 
-st.session_state["uploaded_data"] = load_data(CSV_FILE_PATH)
+
 
 # Sidebar for navigation and information
 st.sidebar.title("Navigation")
@@ -73,11 +76,11 @@ if st.session_state["current_page"] == "home":
     st.title("Real Estate Property Recommendations")
 
     # Check if data is loaded properly
-    if st.session_state["uploaded_data"] is None:
-        st.write("Failed to load the property data.")
-        st.stop()
+    # if st.session_state["uploaded_data"] is None:
+    #     st.write("Failed to load the property data.")
+    #     st.stop()
 
-    dummy_df = st.session_state["uploaded_data"]
+    # dummy_df = st.session_state["uploaded_data"]
 
     # List of states for the drop-down
     states = ['AL', 'DC', 'IL', 'NV', 'AZ', 'PA', 'GA', 'CA', 'TX', 'NY', 'FL', 'MA', 'MI']
@@ -92,15 +95,9 @@ if st.session_state["current_page"] == "home":
         property_type = st.selectbox("Preferred Property Type", ['APARTMENT' ,'CONDO' ,'MANUFACTURED', 'MULTI_FAMILY' ,'SINGLE_FAMILY',
  'TOWNHOUSE'])
         living_area = st.number_input("Living Area (sqft)", min_value=100)
-        # family_size = st.number_input("Family Size", min_value=1, max_value=6)
-        # age = st.number_input("Age", min_value=18, max_value=80)
-        # marital_status = st.selectbox("Marital Status", ["Bachelor", "Married"])
-        # proximity_hospitals = st.checkbox("Proximity to Hospitals")
         min_proximity = 0  # Minimum distance
         max_proximity = 1000  # Maximum distance
         step = 1  # Step size for the slider
-
-        # Sliders for proximity to different amenities
         number_recreation = st.slider(
             "Number of Recreational Areas",
             min_proximity,
@@ -158,7 +155,9 @@ elif st.session_state["current_page"] == "recommendations":
 
     # Get form data from session state
     form_data = st.session_state["form_data"]
+
     description = form_data["description"]
+    
     df_data=pd.DataFrame([form_data])
     df_data=df_data.set_index('state_selected')
     df_data = df_data.drop(columns=['description'])
@@ -194,7 +193,7 @@ elif st.session_state["current_page"] == "recommendations":
     predicted_label=kmeans.predict(X)
     print(predicted_label)
     state_full_data=fulldata[form_data["state_selected"]]
-    print(state_full_data[0])
+    # print(state_full_data[0])
 
     state_filtered_data = filter_by_labels(state_full_data, predicted_label[0])
     print(state_filtered_data[0])
@@ -202,33 +201,65 @@ elif st.session_state["current_page"] == "recommendations":
     for i in range(len(state_filtered_data)):
         zpid_list.append(state_filtered_data[i]['zpid'])
     
-    file_embeddings = json.load(open("data_embed.json"))
+    with open("data_embed.json", "r") as f:
+        data_embed = json.load(f)
     # new_data_point = file_embeddings[str(zpid_list[0])]
+    print(zpid_list)
     dict_embeddings = {}
     for i in zpid_list:
-        if i in file_embeddings:
-            dict_embeddings[i] = file_embeddings[i]
+        if str(i) in data_embed.keys():
+            dict_embeddings[i] = data_embed[str(i)]
+    
     dict_embeddings_values = {}
     a = dict_embeddings.values()
-    l1= [float(i) for i in a]
-    embedding_description = model.encode(form_data["description"])
-    similarity_values = cos_sim(embedding_description[0],torch.tensor(l1))
+    # l1= [float(i) for i in a]
+    print("Tsting")
+    # print(dict_embeddings)
+    payload = {
+        'embeddings': dict_embeddings,
+        'message': description
+    }
+
+    # Define the URL of the backend server
+    server_url = "http://127.0.0.1:5000/predict"  # Replace with your server URL
+
+    # Send a POST request
+    response = requests.post(
+        server_url,
+        json=payload,  # Sending data as JSON
+        headers={'Content-Type': 'application/json'}  # Specifying content type
+    )
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        print("Data sent successfully!")
+        # Do something with the response
+        # print("Server response:", response.json())
+    else:
+        print("Failed to send data. Status code:", response.status_code)
+    # embedding_description = model.encode(form_data["description"])
+    # similarity_values = cos_sim(embedding_description[0],torch.tensor(l1))
     # print(new_data_point)
     # print(zpid_list)
-    for i in zpid_list:
-        dict_embeddings_values[i] = similarity_values[i]
+    # for i in zpid_list:
+    #     dict_embeddings_values[i] = similarity_values[i]
     
-    sorted(dict_embeddings_values.items(),key=lambda kv: (kv[1], kv[0]))
-    print(dict_embeddings_values)
-    print(len(state_filtered_data))
+    zpid_sim = response.json()['similarities']
+    # print(type(zpid_sim))
+    json_file_path = "combined_summary_data.json"
+    
+    zpid_list = [str(zpid) for zpid, _ in zpid_sim]
+    with open(json_file_path, "r",encoding="utf-8", errors='ignore') as file:
+        data = json.load(file)
 
+    filtered_houses = [house for house in data if str(house.get("zpid")) in zpid_list]
+    
+    st.session_state["uploaded_data"] = pd.DataFrame(filtered_houses)
 
     dummy_df = st.session_state["uploaded_data"]
 
     # Recommendation logic using the selected state
-    recommended_properties = dummy_df[
-        dummy_df["address.state"] == form_data["state_selected"]
-    ]
+    recommended_properties = dummy_df
 
     # Display recommended properties with images and details
     if recommended_properties.empty:
@@ -236,21 +267,29 @@ elif st.session_state["current_page"] == "recommendations":
         st.session_state["current_page"] = "home"
         st.stop()
 
+    col1, col2 = st.columns(2)
+    if col1.button("Modify Search"):
+        st.session_state["current_page"] = "home"
+    if col2.button("Back to Form"):
+        st.session_state["current_page"] = "home"
+        
     for idx, property in recommended_properties.iterrows():
         with st.container():
-            st.header(property["Name"])
-            st.write(f"Location: {property['address.city']}, {property['address.state']}")
+            st.header(property["address.streetAddress"])
+            st.write(f"Location:- City: {property['address.city']}, State: {property['address.state']}")
             st.write(f"Price: ${property['price']}")
-            st.write(f"Bedrooms: {property['bedrooms']}, {property['bathrooms']}")
+            st.write(f"Bedrooms: {property['bedrooms']} , Bathrooms: {property['bathrooms']}")
             st.write(f"Size: {property['livingArea']} sqft")
-            st.write(property["description"])
+            st.write(f"Property Type: {property['homeType']}")
+            st.write(property["summary"])
 
-            if "image_urls" in property and len(property["image_urls"]) > 0:
-                st.image(property["image_urls"][0], use_column_width=True)
+            if "originalPhotos" in property and len(property["originalPhotos"]) > 0:
+                urls=ast.literal_eval(property["originalPhotos"])
+                st.image(urls[0], use_column_width=True)
 
-                if st.button("View All Images"):
+                if st.button("View All Images", key=idx):
                     st.write("## All Images")
-                    for image_url in property["image_urls"]:
+                    for image_url in urls:
                         st.image(image_url, use_column_width=True)
             else:
                 st.write("No images available.")
