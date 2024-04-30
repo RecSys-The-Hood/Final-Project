@@ -1,11 +1,17 @@
 from io import BufferedRandom
+from math import cos
+from IPython import embed
 import streamlit as st
+from sentence_transformers import SentenceTransformer
 import pandas as pd
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
+from sympy import asec
+import torch
+from sentence_transformers.util import cos_sim
 import json
 import joblib
 
@@ -17,7 +23,7 @@ def filter_by_labels(data, labels):
 label_encoder = LabelEncoder()
 # Set the path to your CSV file
 CSV_FILE_PATH = "combined_summary_data.csv"  # Ensure the file exists at this path
-
+model = SentenceTransformer("mixedbread-ai/mxbai-embed-large-v1")
 # Initialize session state
 if "current_page" not in st.session_state:
     st.session_state["current_page"] = "home"
@@ -192,11 +198,30 @@ elif st.session_state["current_page"] == "recommendations":
 
     state_filtered_data = filter_by_labels(state_full_data, predicted_label[0])
     print(state_filtered_data[0])
+    zpid_list = []
+    for i in range(len(state_filtered_data)):
+        zpid_list.append(state_filtered_data[i]['zpid'])
+    
+    file_embeddings = json.load(open("data_embed.json"))
+    # new_data_point = file_embeddings[str(zpid_list[0])]
+    dict_embeddings = {}
+    for i in zpid_list:
+        if i in file_embeddings:
+            dict_embeddings[i] = file_embeddings[i]
+    dict_embeddings_values = {}
+    a = dict_embeddings.values()
+    l1= [float(i) for i in a]
+    embedding_description = model.encode(form_data["description"])
+    similarity_values = cos_sim(embedding_description[0],torch.tensor(l1))
+    # print(new_data_point)
+    # print(zpid_list)
+    for i in zpid_list:
+        dict_embeddings_values[i] = similarity_values[i]
+    
+    sorted(dict_embeddings_values.items(),key=lambda kv: (kv[1], kv[0]))
+    print(dict_embeddings_values)
     print(len(state_filtered_data))
-    # state_cluster_full_data = state_full_data[state_full_data['labels']==predicted_label[0]]
-    print("State Cluster Full data")
-    # print(state_cluster_full_data)
-    # cluster_prediction = kmeans.predict([new_data_point])
+
 
     dummy_df = st.session_state["uploaded_data"]
 
