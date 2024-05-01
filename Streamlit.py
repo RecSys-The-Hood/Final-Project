@@ -296,7 +296,7 @@ elif st.session_state["current_page"] == "recommendations":
 
     # Navigation buttons
     col1, col2 = st.columns(2)
-    if col1.button("Modify Search"):
+    if col1.button("Modify Search", key=100):
         st.session_state["current_page"] = "home"
-    if col2.button("Back to Form"):
+    if col2.button("Back to Form",key=200):
         st.session_state["current_page"] = "home"

@@ -3,4 +3,5 @@ __pycache__
 *.geojson
 *.jpg
 *.json
+*.pkl
 data
