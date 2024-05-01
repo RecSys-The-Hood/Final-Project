@@ -1,0 +1,53 @@
+## For shops excluding malls
+
+[out:json];
+
+area["name"="Name of City"]->.searchArea;
+
+(
+  node["shop"="supermarket"](area.searchArea);
+  node["shop"="convenience"](area.searchArea);
+  node["shop"="department_store"](area.searchArea);
+);
+out body;
+>;
+out skel qt;
+
+## For schools and universities
+
+[out:json];
+area["name"="Your Area Name"]->.searchArea;
+(
+  node["amenity"="school"](area.searchArea);
+  node["amenity"="university"](area.searchArea);
+);
+out body;
+>;
+out skel qt;
+
+## For transit
+
+[out:json];
+area["name"="Your Area Name"]->.searchArea;
+(
+  node["public_transport"="platform"](area.searchArea);
+  way["public_transport"="platform"](area.searchArea);
+  relation["public_transport"="platform"](area.searchArea);
+);
+out body;
+>;
+out skel qt;
+
+## For mall and parks (leisure)
+
+out:json];
+area["name"="Your Area Name"]->.searchArea;
+(
+  node["shop"="mall"](area.searchArea);
+);
+(
+  node["leisure"="park"](area.searchArea);
+);
+out body;
+>;
+out skel qt;
