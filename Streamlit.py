@@ -1,17 +1,15 @@
-from io import BufferedRandom
 from math import cos
+import random
 from IPython import embed
 import streamlit as st
-from sentence_transformers import SentenceTransformer
+# from sentence_transformers import SentenceTransformer
 import pandas as pd
 import numpy as np
-from sklearn.cluster import KMeans
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import StandardScaler
-import matplotlib.pyplot as plt
 from sympy import asec
-import torch
-from sentence_transformers.util import cos_sim
+# import torch
+# from sentence_transformers.util import cos_sim
 import json
 import joblib
 import requests
@@ -173,12 +171,12 @@ elif st.session_state["current_page"] == "recommendations":
 
     df_data['homeType'] = df_data['homeType'].map(homeType_Encoding)
 
-    json_file_path = "ClusterPoints_Dataset.json"
+    json_file_path = "./Data/ClusterPoints_Dataset.json"
 
     with open(json_file_path, "r") as file:
         kmeansdata = json.load(file)
 
-    json_file_path_1 = "Labelled_Dataset_with_zpid.json"
+    json_file_path_1 = "./Data/Labelled_Dataset_with_zpid.json"
 
     with open(json_file_path_1, "r") as file:
         fulldata = json.load(file)
@@ -188,7 +186,7 @@ elif st.session_state["current_page"] == "recommendations":
     scaler=StandardScaler()
     X=scaler.fit_transform(df_data)
 
-    kmeans = joblib.load(f'{form_data['state_selected']}_kmeans.pkl')
+    kmeans = joblib.load(f'./Data/{form_data['state_selected']}_kmeans.pkl')
     
     predicted_label=kmeans.predict(X)
     print(predicted_label)
@@ -201,7 +199,7 @@ elif st.session_state["current_page"] == "recommendations":
     for i in range(len(state_filtered_data)):
         zpid_list.append(state_filtered_data[i]['zpid'])
     
-    with open("data_embed.json", "r") as f:
+    with open("./Data/data_embed.json", "r") as f:
         data_embed = json.load(f)
     # new_data_point = file_embeddings[str(zpid_list[0])]
     print(zpid_list)
@@ -246,7 +244,7 @@ elif st.session_state["current_page"] == "recommendations":
     
     zpid_sim = response.json()['similarities']
     # print(type(zpid_sim))
-    json_file_path = "combined_summary_data.json"
+    json_file_path = "./Data/combined_summary_data.json"
     
     zpid_list = [str(zpid) for zpid, _ in zpid_sim]
     with open(json_file_path, "r",encoding="utf-8", errors='ignore') as file:
@@ -296,7 +294,7 @@ elif st.session_state["current_page"] == "recommendations":
 
     # Navigation buttons
     col1, col2 = st.columns(2)
-    if col1.button("Modify Search", key=100):
+    if col1.button("Modify Search", key=random.randint(0, 100)):
         st.session_state["current_page"] = "home"
     if col2.button("Back to Form",key=200):
         st.session_state["current_page"] = "home"
