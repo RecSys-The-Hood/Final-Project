@@ -41,16 +41,16 @@ streamlit run Streamlit.py
 ```
 This will open up a new window in your default browser and the home page will show up which will look like this.
 
-[HomePage](HomePage.png)
+![HomePage](HomePage.png)
 
 
 You will need to enter the details as per your requirement of the house in the form. You will be required to give a small description and then double click the ``Generate recommendation`` button.
 
 The recommendations will show up on your screen like one shown below.
 
-[HouseImages1](HouseImages1.png)
+![HouseImages1](HouseImages1.png)
 
-[HouseImages2](HouseImages2.png)
+![HouseImages2](HouseImages2.png)
 ## Appendix
 
 Any additional information goes here
