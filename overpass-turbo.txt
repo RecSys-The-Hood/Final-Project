@@ -40,7 +40,7 @@ out skel qt;
 
 ## For mall and parks (leisure)
 
-out:json];
+[out:json];
 area["name"="Your Area Name"]->.searchArea;
 (
   node["shop"="mall"](area.searchArea);

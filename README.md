@@ -1,9 +1,7 @@
 
 # Real Estate Recommendation System
 
-
-
-## Run Locally
+## Instructions to Run the Code
 
 Clone the project
 
