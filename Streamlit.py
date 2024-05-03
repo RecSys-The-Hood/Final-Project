@@ -94,7 +94,7 @@ if st.session_state["current_page"] == "home":
  'TOWNHOUSE'])
         living_area = st.number_input("Living Area (sqft)", min_value=100)
         min_proximity = 0  # Minimum distance
-        max_proximity = 1000  # Maximum distance
+        max_proximity = 100  # Maximum distance
         step = 1  # Step size for the slider
         number_recreation = st.slider(
             "Number of Recreational Areas",
@@ -140,10 +140,10 @@ if st.session_state["current_page"] == "home":
             "homeType": property_type,
             "livingArea": living_area,
             "description": description,
-            "leisure_within_5km": number_recreation,
-            "shops_within_5km": number_shops,
-            "schools_within_5km": number_schools,
-            "transit_within_2km":vicinity_transit
+            "leisure_within_5km": number_recreation*10,
+            "shops_within_5km": number_shops*10,
+            "schools_within_5km": number_schools*10,
+            "transit_within_2km":vicinity_transit*10
         }
         st.session_state["form_data"] = form_data
         st.session_state["current_page"] = "recommendations"
@@ -294,7 +294,7 @@ elif st.session_state["current_page"] == "recommendations":
 
     # Navigation buttons
     col1, col2 = st.columns(2)
-    if col1.button("Modify Search", key=random.randint(0, 100)):
+    if col1.button("Modify Search", key=10000):
         st.session_state["current_page"] = "home"
-    if col2.button("Back to Form",key=200):
+    if col2.button("Back to Form",key=20000):
         st.session_state["current_page"] = "home"
