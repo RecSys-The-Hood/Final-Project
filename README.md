@@ -137,12 +137,13 @@ The recommendation algorithm works as follows :
 
 5. We then find the sentence embedding for the user’s description and apply cosine similarity with the sentence embeddings of houses present in the cluster. 
 
-6. The final recommendation is done by displaying the houses in the decreasing order of similarity score
+6. The final recommendation is done by displaying the houses in the decreasing order of similarity score.
+
+7. The code for the elbow method is available in KMeans++_elbow.ipynb, while the kmeans code itself is available in KMeans++.py.
 
 ##### Algorithm Workflow
 
 Here is a flowchart representing the entire algorithm used for recommendation.
-
 
 ![AlgorithmWorkflow](AlgorithmWorkflow.png)
 
@@ -155,12 +156,18 @@ Here is a flowchart representing the entire algorithm used for recommendation.
     2. The results page where the recommendations are displayed. The user can view the house details along with the images.
 
 2. When we run the streamlit app, the application asks the user for the information on what all he expects from the house and ask him to give him a small description of the house he expects.
+
 3. Our website, takes into account the details mentioned by the user and then provides the users with the list of recommendations. 
+
 4. The user is first assigned an initial cluster according to his preferences. The houses in that cluster are recommended to the user.
 
 5. The order of recommendations is decided by the similarity score between the description given by the user and the description of the houses.
+
 6. We implemented a small flask backend to host the sentence embedding model. A POST request is sent to this backend when the user submits the form where the user’s description and the embeddings within the user’s cluster (computed in the offline phase) are sent to the backend.
+
 7. Then the backend algorithm uses the transformer model to get the sentence embeddings of the user’s description and performs the cosine similarity. The output is returned to the user, in order of decreasing similarity with the user’s description.
+
+8. The code for the server is available in the server directory, while the code for the Streamlit application is available in Streamlit.py.
 
 ## Features
 
