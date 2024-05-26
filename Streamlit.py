@@ -137,13 +137,13 @@ if st.session_state["current_page"] == "home":
             "bedrooms": bedrooms,
             "bathrooms": bathrooms, 
             "price": budget,
-            "homeType": property_type,
             "livingArea": living_area,
             "description": description,
             "leisure_within_5km": number_recreation*10,
             "shops_within_5km": number_shops*10,
             "schools_within_5km": number_schools*10,
-            "transit_within_2km":vicinity_transit*10
+            "transit_within_2km":vicinity_transit*10,
+            "homeType": property_type
         }
         st.session_state["form_data"] = form_data
         st.session_state["current_page"] = "recommendations"
@@ -171,24 +171,43 @@ elif st.session_state["current_page"] == "recommendations":
 
     df_data['homeType'] = df_data['homeType'].map(homeType_Encoding)
 
-    json_file_path = "./Data/ClusterPoints_Dataset.json"
+    json_file_path = "./ClusterPoints_Dataset.json"
 
     with open(json_file_path, "r") as file:
         kmeansdata = json.load(file)
 
-    json_file_path_1 = "./Data/Labelled_Dataset_with_zpid.json"
+    json_file_path_1 = "./Labelled_Dataset_with_zpid.json"
 
     with open(json_file_path_1, "r") as file:
         fulldata = json.load(file)
 
     # cluster_points= kmeansdata[form_data["state_selected"]]
     # print(cluster_points)
-    scaler=StandardScaler()
-    X=scaler.fit_transform(df_data)
 
-    kmeans = joblib.load(f'./Data/{form_data['state_selected']}_kmeans.pkl')
+    # changing here
+
+    # scaler=StandardScaler()
+    # X=scaler.fit_transform(df_data)
+
+    df_to_transform = df_data.drop(columns=['homeType'])
+    df_excluded = df_data[['homeType']]
+    # Apply the transformation
+    # scaler = StandardScaler()
+    scaler= joblib.load(f"./{form_data['state_selected']}_scaler.pkl")
+    transformed_array = scaler.transform(df_to_transform)
+    df_transformed = pd.DataFrame(transformed_array, columns=df_to_transform.columns, index=df_data.index)
+    # Recombine the DataFrame
+    df_result = pd.concat([df_transformed, df_excluded], axis=1)
+    # print(df_result)
+    X=df_result.values
+    weights = [5,5,1,1,1,1,1,1,1]
+    X=X*weights
+
+    print(f"Input is {X}")
+    kmeans = joblib.load(f"./{form_data['state_selected']}_kmeans.pkl")
     
     predicted_label=kmeans.predict(X)
+    
     print(predicted_label)
     state_full_data=fulldata[form_data["state_selected"]]
     # print(state_full_data[0])
@@ -199,7 +218,7 @@ elif st.session_state["current_page"] == "recommendations":
     for i in range(len(state_filtered_data)):
         zpid_list.append(state_filtered_data[i]['zpid'])
     
-    with open("./Data/data_embed.json", "r") as f:
+    with open("./data.json", "r") as f:
         data_embed = json.load(f)
     # new_data_point = file_embeddings[str(zpid_list[0])]
     print(zpid_list)
@@ -244,14 +263,16 @@ elif st.session_state["current_page"] == "recommendations":
     
     zpid_sim = response.json()['similarities']
     # print(type(zpid_sim))
-    json_file_path = "./Data/combined_summary_data.json"
+    json_file_path = "./combined_summary_data.json"
     
     zpid_list = [str(zpid) for zpid, _ in zpid_sim]
     with open(json_file_path, "r",encoding="utf-8", errors='ignore') as file:
         data = json.load(file)
 
-    filtered_houses = [house for house in data if str(house.get("zpid")) in zpid_list]
-    
+
+    # filtered_houses = [house for house in data if str(house["zpid"]) in zpid_list]
+    filtered_houses = [data[zpid] for zpid in zpid_list if zpid in data]
+
     st.session_state["uploaded_data"] = pd.DataFrame(filtered_houses)
 
     dummy_df = st.session_state["uploaded_data"]
