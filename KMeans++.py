@@ -1,5 +1,4 @@
 # %%
-import joblib
 import pandas as pd
 import numpy as np
 from sklearn.cluster import KMeans
@@ -13,7 +12,7 @@ df=df.set_index(keys="zpid")
 # df.columns
 
 # %%
-df1=df.drop(columns=['zipcode','hdpUrl','cityId','livingAreaValue','rentZestimate','photoCount','address.streetAddress','originalPhotos','latitude','longitude','concatenated_desc'])
+df1=df.drop(columns=['zipcode','hdpUrl','cityId','livingAreaValue','rentZestimate','photoCount','address.streetAddress','originalPhotos','latitude','longitude'])
 
 # df1
 
@@ -53,7 +52,8 @@ dfs_by_category = {}
 
 # Get unique values in the 'Category' column
 unique_categories = df1['address.state'].unique()
-
+unique_categories=unique_categories[:-1]
+print(unique_categories)
 # Iterate over unique categories
 for category in unique_categories:
     # Filter the DataFrame for the current category
@@ -67,6 +67,7 @@ for category, df_category in dfs_by_category.items():
     print(f"Category: {category}")
     print(len(df_category))
     # print(df_category)
+
 
 # %%
 # MSE= {}
@@ -113,10 +114,26 @@ for key, value in dfs_by_category.items():
         ])
 
         # Standardize the data and apply KMeans clustering
+        df_to_transform = df_check.drop(columns=['homeType'])
+        df_excluded = df_check[['homeType']]
+        # Apply the transformation
         scaler = StandardScaler()
-        X = scaler.fit_transform(df_check)
-        kmeans = KMeans(n_clusters=12, init='k-means++', random_state=42)
+        transformed_array = scaler.fit_transform(df_to_transform)
+        df_transformed = pd.DataFrame(transformed_array, columns=df_to_transform.columns, index=df_check.index)
+        # Recombine the DataFrame
+        df_result = pd.concat([df_transformed, df_excluded], axis=1)
+        # print(df_result)
+        X=df_result.values
+        weights = [5,5,1,1,1,1,1,1,1]
+        X=X*weights
+                # Try different values of k (number of clusters)
+        # for k in range(2, 40):            
+        kmeans = KMeans(n_clusters=12,init='k-means++', random_state=42)
+        if(key=='CA'):
+            kmeans = KMeans(n_clusters=24,init='k-means++', random_state=42)
+
         kmeans.fit(X)
+
         labels = kmeans.labels_
 
         # Add labels to the DataFrame
@@ -140,6 +157,7 @@ for key, value in dfs_by_category.items():
 
         # Save KMeans model
         joblib.dump(kmeans, f'{key}_kmeans.pkl')
+        joblib.dump(scaler,f'{key}_scaler.pkl')
 
 # Convert to dictionary format for JSON serialization
 json_data = {key: df.to_dict(orient='records') for key, df in dfs_by_category_final.items()}
