@@ -27,12 +27,12 @@ def filter_by_labels(data, labels):
     return filtered_data
 
 
-users = pd.read_csv("Users.csv")
+users = pd.read_csv("Users_Synthetic.csv")
 results = pd.DataFrame(columns=["Mean ROUGE Score", "Variance in ROUGE Score"])
 
 cols = ['bedrooms', 'bathrooms', 'price', 'livingArea', 'leisure_within_5km', 'shops_within_5km', 'schools_within_5km', 'transit_within_2km', 'homeType']
 # Define the URL of the backend server
-server_url = "http://127.0.0.1:5000/predict"  
+# server_url = "http://127.0.0.1:5000/predict"  
 
 df=pd.read_csv("./Final_Combined_Dataset.csv")
 df=df.set_index(keys="zpid")
@@ -156,7 +156,7 @@ for index, row in users.iterrows():
             joblib.dump(scaler,f'{key}_scaler.pkl')
 
     # Convert to dictionary format for JSON serialization
-    json_data = {key: df.to_dict(orient='records') for key, df in dfs_by_category_final.items()}
+    json_data = {key: df_cat.to_dict(orient='records') for key, df_cat in dfs_by_category_final.items()}
 
     # Ensure conversion to Python-native types
     json_cluster_data = {key: value.tolist() for key, value in dfs_cluster.items()}
@@ -254,6 +254,7 @@ for index, row in users.iterrows():
     df_sorted=np.floor(df_X)
     df_sorted=df_sorted.set_index(row_indexes)
     
+    # print(df_sorted.shape[0])
     top_10_recommendations = df_sorted.head(10)
     top_10_recommendations = top_10_recommendations.reset_index()
     df_summary = pd.read_csv("combined_summary_data.csv")
@@ -263,7 +264,7 @@ for index, row in users.iterrows():
 
     rouge_scores = [rouge_scorer.get_scores(
         hyps=description,
-        refs=reference,
+        refs=str(reference),
     )[0]["rouge-l"]["f"] for reference in top_10_recommendations[column].tolist()]
 
     dict = {
@@ -272,6 +273,7 @@ for index, row in users.iterrows():
     }
 
     results.loc[len(results)] = dict
+    # print(f"Done {index}")
 
 results.to_csv("Results_With_Cluster_centers.csv", index=False)
 print("Done")

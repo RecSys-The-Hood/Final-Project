@@ -47,7 +47,7 @@ df1 = df1.dropna(subset=columns_to_check, how='all')
 label_encoder = LabelEncoder()
 df1['homeType'] = label_encoder.fit_transform(df1['homeType'])
 encoded_classes = label_encoder.classes_
-print(encoded_classes)
+# print(encoded_classes)
 
 dfs_by_category = {}
 
@@ -55,8 +55,8 @@ dfs_by_category = {}
 unique_categories = df1['address.state'].unique()
 unique_categories=unique_categories[:-1]
 
-print("Unique categories")
-print(unique_categories)
+# print("Unique categories")
+# print(unique_categories)
 # Iterate over unique categories
 for category in unique_categories:
     # Filter the DataFrame for the current category
@@ -159,9 +159,6 @@ for index, row in users.iterrows():
     with open('ClusterPoints_Dataset.json', 'w') as f:
         json.dump(json_cluster_data, f, indent=4)
 
-
-
-
     # inference code
     
     kmeans = joblib.load(f"{state}_kmeans.pkl")
@@ -246,8 +243,6 @@ for index, row in users.iterrows():
 
     recommended_properties = filtered_houses
     recommendations = pd.DataFrame(recommended_properties, index=zpid_list)
-
-
 
     # score calculation
     top_10_recommendations = recommendations.head(10)
