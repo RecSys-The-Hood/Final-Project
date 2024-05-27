@@ -16,7 +16,7 @@ import json
 
 
 # global vars
-users = pd.read_csv("Users.csv")
+users = pd.read_csv("Users_Synthetic.csv")
 
 results = pd.DataFrame(columns=["Mean ROUGE Score", "Variance in ROUGE Score"])
 
@@ -24,7 +24,7 @@ cols = ['bedrooms', 'bathrooms', 'price', 'livingArea', 'leisure_within_5km', 's
 # Define the URL of the backend server
 server_url = "http://127.0.0.1:5000/predict"  # Replace with your server URL
 
-df=pd.read_csv("./Final_Combined_Dataset.csv")
+df=pd.read_csv("./Data_Zip/Final_Combined_Dataset.csv")
 df=df.set_index(keys="zpid")
 
 df1=df.drop(columns=['zipcode','hdpUrl','cityId','livingAreaValue','rentZestimate','photoCount','address.streetAddress','originalPhotos','latitude','longitude'])
@@ -208,7 +208,7 @@ for index, row in users.iterrows():
     for i in range(len(state_filtered_data)):
         zpid_list.append(state_filtered_data[i]['zpid'])
 
-    with open("./data.json", "r") as f:  ## change embeddings file here
+    with open("./Data_Zip/data.json", "r") as f:  ## change embeddings file here
         data_embed = json.load(f)
     # new_data_point = file_embeddings[str(zpid_list[0])]
     # print(zpid_list)
@@ -235,7 +235,7 @@ for index, row in users.iterrows():
         print("Failed to send data. Status code:", response.status_code)
 
     zpid_sim = response.json()['similarities']
-    json_file_path = "./combined_summary_data.json"
+    json_file_path = "./Data_zip/combined_summary_data.json"
 
     zpid_list = [str(zpid) for zpid, _ in zpid_sim]
     with open(json_file_path, "r",encoding="utf-8", errors='ignore') as file:
