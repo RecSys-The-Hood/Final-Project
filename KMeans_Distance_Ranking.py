@@ -176,6 +176,9 @@ for index, row in users.iterrows():
         'SINGLE_FAMILY': 4,
         'TOWNHOUSE': 5
     }
+
+    kmeans = joblib.load(f"{state}_kmeans.pkl")
+    scaler = joblib.load(f"{state}_scaler.pkl")
     
     json_file_path = "./ClusterPoints_Dataset.json"
 
