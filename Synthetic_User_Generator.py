@@ -62,11 +62,11 @@ for i in range(50):
     val_area = random.randint(800, 5000)
 
     temp_p = val_area*rates[state] 
-    val_price = temp_p + random.randint(-1*math.ceil(0.1*temp_p), math.ceil(0.1*temp_p))
-    val_leisure = leisure[state] + random.randint(-1*math.ceil(leisure_std[state]), math.ceil(leisure_std[state]))
-    val_shop = shops[state] + random.randint(-1*math.ceil(shops_std[state]), math.ceil(shops_std[state]))
-    val_school = schools[state] + random.randint(-1*math.ceil(schools_std[state]), math.ceil(schools_std[state]))
-    val_transit = transit[state] + random.randint(-1*math.ceil(transit_std[state]), math.ceil(transit_std[state]))
+    val_price = math.ceil(temp_p) + random.randint(-1*math.ceil(0.1*temp_p), math.ceil(0.1*temp_p))
+    val_leisure = math.ceil(leisure[state]) + random.randint(-1*math.ceil(leisure_std[state]), math.ceil(leisure_std[state]))
+    val_shop = math.ceil(shops[state]) + random.randint(-1*math.ceil(shops_std[state]), math.ceil(shops_std[state]))
+    val_school = math.ceil(schools[state]) + random.randint(-1*math.ceil(schools_std[state]), math.ceil(schools_std[state]))
+    val_transit = math.ceil(transit[state]) + random.randint(-1*math.ceil(transit_std[state]), math.ceil(transit_std[state]))
     val_type = 2  # House type value is always 2
     
     # Generate a house-related description without mentioning number of bedrooms and bathrooms
