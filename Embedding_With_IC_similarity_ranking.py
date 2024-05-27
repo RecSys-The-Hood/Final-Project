@@ -83,7 +83,7 @@ for index, row in users.iterrows():
                row['val_leisure'],row['val_shop'],row['val_school'],
                row['val_transit'],row['val_type']]
     
-    description = "A large backyard, swimming pool, spacious living room, furniture in bedroom, tiled bathroom"    
+    description = row['description']    
 
     # clustering code
     dfs_by_category_final = {}

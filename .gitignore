@@ -5,3 +5,4 @@ __pycache__
 *.json
 *.pkl
 data
+*.zip
