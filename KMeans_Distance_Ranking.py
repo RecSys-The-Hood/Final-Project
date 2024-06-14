@@ -34,7 +34,7 @@ cols = ['bedrooms', 'bathrooms', 'price', 'livingArea', 'leisure_within_5km', 's
 # Define the URL of the backend server
 # server_url = "http://127.0.0.1:5000/predict"  
 
-df=pd.read_csv("./Final_Combined_Dataset.csv")
+df=pd.read_csv("./Data_Zip/Final_Combined_Dataset.csv")
 df=df.set_index(keys="zpid")
 
 df1=df.drop(columns=['zipcode','hdpUrl','cityId','livingAreaValue','rentZestimate','photoCount','address.streetAddress','originalPhotos','latitude','longitude'])
@@ -257,7 +257,7 @@ for index, row in users.iterrows():
     # print(df_sorted.shape[0])
     top_10_recommendations = df_sorted.head(10)
     top_10_recommendations = top_10_recommendations.reset_index()
-    df_summary = pd.read_csv("combined_summary_data.csv")
+    df_summary = pd.read_csv("./Data_Zip/combined_summary_data.csv")
     top_10_recommendations = pd.merge(top_10_recommendations, df_summary, on='zpid', how='inner')
 
     rouge_scorer = Rouge()
@@ -275,5 +275,5 @@ for index, row in users.iterrows():
     results.loc[len(results)] = dict
     # print(f"Done {index}")
 
-results.to_csv("Results_With_Cluster_centers.csv", index=False)
+results.to_csv("Results_With_Cluster_centers_modi.csv", index=False)
 print("Done")

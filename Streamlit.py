@@ -218,7 +218,7 @@ elif st.session_state["current_page"] == "recommendations":
     for i in range(len(state_filtered_data)):
         zpid_list.append(state_filtered_data[i]['zpid'])
     
-    with open("./data.json", "r") as f:
+    with open("./Data_Zip/data.json", "r") as f:
         data_embed = json.load(f)
     # new_data_point = file_embeddings[str(zpid_list[0])]
     print(zpid_list)
@@ -263,7 +263,7 @@ elif st.session_state["current_page"] == "recommendations":
     
     zpid_sim = response.json()['similarities']
     # print(type(zpid_sim))
-    json_file_path = "./combined_summary_data.json"
+    json_file_path = "./Data_Zip/combined_summary_data.json"
     
     zpid_list = [str(zpid) for zpid, _ in zpid_sim]
     with open(json_file_path, "r",encoding="utf-8", errors='ignore') as file:
